@@ -17,11 +17,11 @@ $var title: OL Book Loader
 <div>
     <h4>Summary by status</h4>
     $for name, value in summary['status'].items():
-        <div><a href="$changequery(status=name, match_type=None)">${name or "none"}</a> - $value</div>
-    <div><strong>total</strong> - $sum(summary['status'].values())</div>
+        <div><a href="$changequery(status=name, match_type=None)">${name or "none"}</a> - $commify(value)</div>
+    <div><strong>total</strong> - $commify(sum(summary['status'].values()))</div>
     <h4>Summary of matches</h4>
     $for name, value in summary['match_type'].items():
-        <div><a href="$changequery(status='matched', match_type=name)">${name or "none"}</a> - $value</div>
+        <div><a href="$changequery(status='matched', match_type=name)">${name or "none"}</a> - $commify(value)</div>
 </div>
 
 <h2>Items</h2>

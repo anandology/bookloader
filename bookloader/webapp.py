@@ -14,7 +14,8 @@ tglobals = {
     'changequery': web.changequery,
     "isinstance": isinstance,
     "list": list,
-    "sum": sum
+    "sum": sum,
+    "commify": web.commify,
 }
 
 path = os.path.join(os.path.dirname(__file__), "templates")
