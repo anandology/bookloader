@@ -1,0 +1,22 @@
+
+# password to database can be specified in 3 different ways
+# pw - the password in plain text
+# pw_file - a text file containing password
+# pw_script - a script that prints the password
+
+ia_db:
+    dbn: postgres
+    db: archive
+    user: archive
+    host: server-name
+    pw_script: xxx
+
+ol_db: 
+    dbn: postgres
+    db: openlibrary
+    user: openlibrary
+    host: ol-db
+
+db:
+    dbn: postgres
+    db: bookloader

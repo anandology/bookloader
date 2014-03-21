@@ -1,0 +1,64 @@
+$def with (items, summary)
+
+$var title: OL Book Loader
+
+<style type="text/css">
+    td.tag {
+        min-width: 100px;
+        padding-right: 10px;
+        color: #444;
+        font-weight: bold;
+        text-align: right;
+    }
+</style>
+
+<h1>OL Book Loader</h1>
+
+<div>
+    <h4>Summary by status</h4>
+    $for name, value in summary['status'].items():
+        <div><a href="$changequery(status=name, match_type=None)">${name or "none"}</a> - $value</div>
+    <div><strong>total</strong> - $sum(summary['status'].values())</div>
+    <h4>Summary of matches</h4>
+    $for name, value in summary['match_type'].items():
+        <div><a href="$changequery(status='matched', match_type=name)">${name or "none"}</a> - $value</div>
+</div>
+
+<h2>Items</h2>
+
+<table class="table table-bordered">
+    <tr>
+        <th>#</th>
+        <th>IA</th>
+        <th>OL</th>
+    </tr>
+    $for item in items:
+        <tr>
+            <td>$loop.index</td>
+            <td>
+                <table class="xtable">
+                    <tr><td class="tag identifier">Identifier</td><td class="value"><a href="https://archive.org/details/$item.identifier">$item.identifier</a></td></tr>
+                    <tr><td class="tag">Title</td><td class="value">$item.title</td></tr>
+                    <tr><td class="tag">Author</td><td class="value">$item.author</td></tr>
+                    $for k in ['publisher', 'date', 'isbn', 'collection']:
+                        <tr><td class="tag">$k</td><td class="value">$item.metadata.get(k, '')</td></tr>
+                </table>
+                <div>Status: $item.status</div>
+                <div>match-type: $item.match_type</div>
+                <div>Match: $item.match</div>                
+            </td>
+            <td>
+                $if item.match and item.get('ol'):
+                    <table class="xtable">
+                        $ ol = item.ol
+                        <tr><td class="tag identifier">key</td><td class="value"><a href="https://openlibrary.org$ol['key']">$ol['key']</a></td></tr>
+                        $for k in ('title', 'publisher', 'publish_date', 'isbn_10', 'isbn_13', 'ocaid'):
+                            $if k in ol:
+                                $ value = ol[k]
+                                $if isinstance(ol[k], list):
+                                    $ value = ", ".join(value)
+                                <tr><td class="tag">$k</td><td class="value">$value</td></tr>
+                    </table>
+            </td>
+        </tr>
+</ul>

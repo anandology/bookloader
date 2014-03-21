@@ -1,0 +1,24 @@
+$def with (page)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>$page.title</title>
+
+    <link rel="stylesheet" href="/static/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/bootstrap-theme.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-inverse" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="/">OL Book Loader</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">   
+        $:page
+    </div>
+</body>
+</html>
