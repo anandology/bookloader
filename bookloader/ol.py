@@ -34,7 +34,8 @@ class OpenLibrary:
         """Queries ol db for all books where given property has one of the values.
         Returns a dict with mapping from value to book-key for all matches.
         """
-        print "query_things", property, len(values), values[:10]
+        if not values:
+            return {}
         key_id = self.get_property_id("/type/edition", property)
         result = self.db.query("SELECT thing.key as book_key, e.value as value FROM edition_str e, thing" +
             " WHERE thing.id=e.thing_id" + 

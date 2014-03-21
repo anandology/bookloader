@@ -63,7 +63,10 @@ class Loader:
     def get_pending_identifiers_in_chunks(self, chunk_size=1000):
         id = 0
         while True:
-            result = self.db.query("SELECT id, identifier FROM bookloader WHERE id > $id AND status='pending' LIMIT $chunk_size", vars=locals()).list()
+            result = self.db.query(
+                "SELECT id, identifier FROM bookloader" +
+                " WHERE id > $id AND status='pending'" + 
+                " ORDER BY id LIMIT $chunk_size", vars=locals()).list()
             print "get_pending_identifiers_in_chunks id={0}, found {1} rows".format(id, len(result))
             if not result:
                 break
