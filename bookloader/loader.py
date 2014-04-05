@@ -60,7 +60,37 @@ class Loader:
         result = self.db.query("SELECT * FROM bookloader WHERE status='pending'", vars=locals())
         return [row.identifier for row in result]
 
+    def select_in_chunks(self, table, columns, where, vars=None, chunk_size=1000):
+        """Runs select on the given table in a loop and returns an iterator
+        over chunk of rows.
+
+        Assumes that a column with name 'id' is present in the columns.
+        """
+        vars = vars or {}
+        id = 0
+        while True:
+            where2 = where + " AND id > $_id"
+            vars['_id'] = id
+            result = self.db.select(table, 
+                what=columns, 
+                where=where2, 
+                vars=vars, 
+                order='id',
+                limit=chunk_size).list()
+            if not result:
+                break
+            id = max(row.id for row in result)
+            yield result
+
     def get_pending_identifiers_in_chunks(self, chunk_size=1000):
+        for rows in self.select_in_chunks("bookloader", "id, identifier", where="status='pending'", chunk_size=chunk_size):
+            yield [row.identifier for row in rows]
+
+    def get_matched_rows_in_chunks(self, chunk_size=1000):
+        for rows in self.select_in_chunks("bookloader", "id, identifier, match", where="status='matched'", chunk_size=chunk_size):
+            yield rows
+
+    def xx_get_pending_identifiers_in_chunks(self, chunk_size=1000):
         id = 0
         while True:
             result = self.db.query(
@@ -99,6 +129,14 @@ class Loader:
             match_type=match_type, match=match, status="matched", 
             vars=locals())
 
+    def mark_conflict(self, identifier, current_ocaid):
+        #print "mark_matched", identifier, match_type, match
+        self.db.update("bookloader", 
+            where="identifier=$identifier", 
+            status="conflict", 
+            comments=current_ocaid,
+            vars=locals())
+
     def match_openlibrary_field(self):
         for identifiers in self.get_pending_identifiers_in_chunks():
             metadata_dict = self.ia.get_metadata(identifiers)
@@ -135,6 +173,26 @@ class Loader:
             if invalid:
                 self.db.update("bookloader", where="identifier IN $invalid", status="invalid", vars=locals())
 
+    def find_conflicts(self):
+        """"When tring to add an IA item to OL sometimes we encounter that the
+        matched record already has another ocaid already set. This function 
+        finds such records and marks them as conflict.
+
+        All the records with conflict flag set will be ignored when loading books to OL.
+
+        This function should be called after finding the matches. 
+        """
+        for rows in self.get_matched_rows_in_chunks():
+            book_keys = list(set([row.match for row in rows]))
+            docs = self.ol.get_metadata(book_keys).values()
+            ocaids = dict((doc['key'], doc.get('ocaid')) for doc in docs)
+            with self.db.transaction():
+                for row in rows:
+                    current_ocaid = ocaids.get(row.match)
+                    # if that book already has an ocaid
+                    if current_ocaid and current_ocaid != row.identifier:
+                        self.mark_conflict(row.identifier, current_ocaid)
+
 class Item(web.storage):
     def __init__(self, *a, **kw):
         web.storage.__init__(self, *a, **kw)
@@ -161,5 +219,7 @@ if __name__ == "__main__":
     load_config_from_args()
     if "--match" in sys.argv:
         Loader().match()
+    if "--find-conflicts" in sys.argv:
+        Loader().find_conflicts()
     else:
         Loader().load_identifiers_from_file(sys.argv[1])

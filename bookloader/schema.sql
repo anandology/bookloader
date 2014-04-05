@@ -2,7 +2,7 @@
 create table bookloader (
     id serial primary key,
     identifier text unique,
-    status text default 'pending',
+    status text default 'pending', -- one of 'pending', 'matched', 'resolved' or 'conflict'
     match_type text,
     match text,
     comments text
